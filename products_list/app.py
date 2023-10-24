@@ -12,9 +12,33 @@ cloudant_url = 'https://5b1e4785-227c-4ca4-91a9-1171b784ec06-bluemix.cloudantnos
 client = Cloudant.iam(cloudant_username, cloudant_api_key, connect=True, url=cloudant_url)
 session = client.session()
 print('Databases:', client.all_dbs())
-db = client['reviews']
+db_reviews = client['reviews']
+db_dealerships = client['dealerships']
 app = Flask(__name__)
 
+@app.route('/api/dealership', methods=['GET'])
+def get_dealerships():
+    dealership_id = request.args.get('id')
+    state = request.args.get('state')
+    # Execute the query using the query method
+    result = {}
+    if dealership_id is None and state is None:
+        result = db_dealerships.all_docs(include_docs=True)
+        data_list = []
+        for doc in result['rows']:
+            data_list.append(doc["doc"])
+        return jsonify(data_list)
+    elif dealership_id is not None or state is not None:
+        selector = {}
+        if dealership_id is not None:
+            selector['id'] = int(dealership_id)
+        if state is not None:
+            selector['state'] = state
+        result = db_dealerships.get_query_result(selector)
+        data_list = []
+        for doc in result:
+            data_list.append(doc)
+        return jsonify(data_list)
 
 @app.route('/api/get_reviews', methods=['GET'])
 def get_reviews():
@@ -32,7 +56,7 @@ def get_reviews():
         'dealership': dealership_id
     }
     # Execute the query using the query method
-    result = db.get_query_result(selector)
+    result = db_reviews.get_query_result(selector)
     # Create a list to store the documents
     data_list = []
     # Iterate through the results and add documents to the list
@@ -56,7 +80,7 @@ def post_review():
         if field not in review_data:
             abort(400, description=f'Missing required field: {field}')
     # Save the review data as a new document in the Cloudant database
-    db.create_document(review_data)
+    db_reviews.create_document(review_data)
     return jsonify({"message": "Review posted successfully"}), 201
 
 
