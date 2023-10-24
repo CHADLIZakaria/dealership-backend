@@ -16,6 +16,7 @@ db_reviews = client['reviews']
 db_dealerships = client['dealerships']
 app = Flask(__name__)
 
+
 @app.route('/api/dealership', methods=['GET'])
 def get_dealerships():
     dealership_id = request.args.get('id')
@@ -40,9 +41,10 @@ def get_dealerships():
             data_list.append(doc)
         return jsonify(data_list)
 
+
 @app.route('/api/get_reviews', methods=['GET'])
 def get_reviews():
-    dealership_id = request.args.get('id')
+    dealership_id = request.args.get('dealerId')
     # Check if "id" parameter is missing
     if dealership_id is None:
         return jsonify({"error": "Missing 'id' parameter in the URL"}), 400
